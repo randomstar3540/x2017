@@ -253,7 +253,7 @@ int main(int argc, char **argv){
             memccpy(&CUR_PC,&PC,3,sizeof(int16_t));
             status = update_pc(&PC,&ins_byte,&ins_bit,&func);
             read_op(bf, ins_byte[CUR_PC[1]][CUR_PC[0]], ins_bit[CUR_PC[1]][CUR_PC[0]], asmcode);
-            printf("%s", asmcode);
+            printf("\t%s", asmcode);
         }
     }
     return 0;
