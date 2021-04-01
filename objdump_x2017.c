@@ -13,6 +13,7 @@ void printBits(size_t const size, void const * const ptr)
             byte = (b[i] >> j) & 1;
             printf("%u", byte);
         }
+        printf(" ");
     }
     puts("");
 }
@@ -86,7 +87,7 @@ int read_op(FILE* bf, int16_t byte, u_int8_t bit, char *result){
     buffer = ((buffer & 0xff) << 8) | ((buffer & 0xff00) >> 8);
 
     read_bit_reverse(bf,&fsize,&buffer,&bit,3, &opcode);
-
+//    printBits(2,&buffer);
     u_int8_t first_v;
     u_int8_t first_t;
     u_int8_t second_v;
@@ -200,6 +201,7 @@ int fetch_next_func(FILE* bf, int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
         for(int i = ins_num -1; i >= 0; i--) {
             (*byte)[counter][i] = fsize+1;
             (*bit)[counter][i] = bit_ptr;
+//            printf("%d,%d\n",fsize + 1, bit_ptr);
             read_bit_reverse(bf,&fsize,&buffer, &bit_ptr, 3, &opcode);
             fetch_op(opcode,bf,&fsize,&buffer,&bit_ptr);
         }
@@ -225,12 +227,12 @@ int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
 }
 
 int main(int argc, char **argv){
-    if (argc < 2){
-        return 1;
-    }
-
-    FILE *bf = fopen(argv[1],"rb");
-//    FILE *bf = fopen("tests/sample_program.x2017","rb");
+//    if (argc < 2){
+//        return 1;
+//    }
+//
+//    FILE *bf = fopen(argv[1],"rb");
+    FILE *bf = fopen("tests/sp.x2017","rb");
 
     fseek(bf,0,SEEK_END);
 
@@ -251,8 +253,10 @@ int main(int argc, char **argv){
     while(status != -1){
         printf("FUNC LABEL %d\n",func[PC[1]][0]);
         for(int i = 0; i < func[PC[1]][1]; i++) {
-            memccpy(&CUR_PC,&PC,2,sizeof(int16_t));
+            memccpy(&CUR_PC,&PC,1,2*sizeof(int16_t));
             status = update_pc(&PC,&ins_byte,&ins_bit,&func);
+//            printf("%d,%d\n",ins_byte[CUR_PC[1]][CUR_PC[0]], ins_bit[CUR_PC[1]][CUR_PC[0]]);
+//            printf("%d,%d\n",CUR_PC[0],CUR_PC[1]);
             read_op(bf, ins_byte[CUR_PC[1]][CUR_PC[0]], ins_bit[CUR_PC[1]][CUR_PC[0]], asmcode);
             printf("    %s", asmcode);
         }
