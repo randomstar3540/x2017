@@ -253,7 +253,7 @@ int main(int argc, char **argv){
     while(status != -1){
         printf("FUNC LABEL %d\n",func[PC[1]][0]);
         for(int i = 0; i < func[PC[1]][1]; i++) {
-            memccpy(&CUR_PC,&PC,1,2*sizeof(int16_t));
+            memcpy(&CUR_PC,&PC,2*sizeof(int16_t));
             status = update_pc(&PC,&ins_byte,&ins_bit,&func);
 //            printf("%d,%d\n",ins_byte[CUR_PC[1]][CUR_PC[0]], ins_bit[CUR_PC[1]][CUR_PC[0]]);
 //            printf("%d,%d\n",CUR_PC[0],CUR_PC[1]);
