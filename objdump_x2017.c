@@ -77,7 +77,7 @@ int read_addr(FILE* bf, int16_t *fsize,u_int8_t type, u_int8_t *result, u_int16_
     return 0;
 }
 
-int read_op(FILE* bf, int16_t byte, uint8_t bit, char *result){
+int read_op(FILE* bf, int16_t byte, u_int8_t bit, char *result){
     int16_t fsize = byte+1;
     fseek(bf,fsize,SEEK_SET);
     u_int16_t buffer = 0;
@@ -190,7 +190,7 @@ int fetch_next_func(FILE* bf, int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
     u_int8_t ins_num;
     u_int8_t opcode;
 
-    uint8_t func_label;
+    u_int8_t func_label;
 
     readbyte(bf,&fsize,2,&buffer);
     buffer = ((buffer & 0xff) << 8) | ((buffer & 0xff00) >> 8);
