@@ -215,7 +215,7 @@ int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
     if((*PC)[0]+1 < 256 && (*byte)[(*PC)[1]][(*PC)[0]+1] != -1 && (*byte)[*func[(*PC)[1]][0]][(*PC)[0]+1] != -1){
         (*PC)[0] += 1;
         return 0;
-    }else if (*PC[1] +1 < 8 && *func[*PC[1] +1][0] !=-1){
+    }else if ((*PC)[1] +1 < 8 && *func[(*PC)[1] +1][0] !=-1){
         (*PC)[1] += 1;
         (*PC)[0] = 0;
         return 1;
