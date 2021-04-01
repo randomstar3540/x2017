@@ -1,4 +1,4 @@
-CC=gcc-10
+CC=gcc
 CFLAGS=-fsanitize=address -Wvla -Wall -Werror -g -std=gnu11 -lasan
 
 # fill in all your make rules
