@@ -225,12 +225,12 @@ int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
 }
 
 int main(int argc, char **argv){
-//    if (argc < 2){
-//        return 1;
-//    }
+    if (argc < 2){
+        return 1;
+    }
 
-    //FILE *bf = fopen(argv[1],"rb");
-    FILE *bf = fopen("tests/sample_program.x2017","rb");
+    FILE *bf = fopen(argv[1],"rb");
+//    FILE *bf = fopen("tests/sample_program.x2017","rb");
 
     fseek(bf,0,SEEK_END);
 
