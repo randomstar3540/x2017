@@ -124,7 +124,7 @@ int read_op(FILE* bf, int16_t byte, u_int8_t bit, char *result){
             sprintf(result,"ADD%s\n",address);
             return 0;
         case 0b101: //PRINT
-            sprintf(result,"PRT%s\n",address);
+            sprintf(result,"PRINT%s\n",address);
             return 0;
         case 0b110: //NOT
             sprintf(result,"NOT%s\n",address);
