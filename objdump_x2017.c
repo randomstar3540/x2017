@@ -212,7 +212,7 @@ int fetch_next_func(FILE* bf, int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
 }
 
 int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][256], int16_t (*bit)[8][256], int16_t (*func)[8][2]){
-    if((*PC)[0]+1 < 256 && (*byte)[(*PC)[0]][(*PC)[0]+1] != -1 && (*byte)[(*PC)[0]][(*PC)[0]+1] != -1){
+    if((*PC)[0]+1 < 256 && (*byte)[(*PC)[1]][(*PC)[0]+1] != -1 && (*byte)[(*PC)[0]][(*PC)[1]+1] != -1){
         (*PC)[0] += 1;
         return 0;
     }else if ((*PC)[1] +1 < 8 && (*func)[(*PC)[1] +1][0] !=-1){
