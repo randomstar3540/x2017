@@ -212,7 +212,7 @@ int fetch_next_func(FILE* bf, int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
 }
 
 int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][256], int16_t (*bit)[8][256], int16_t (*func)[8][2]){
-    if((*PC)[0]+1 < 256 && (*byte)[(*PC)[1]][(*PC)[0]+1] != -1 && (*byte)[(*PC)[0]][(*PC)[1]+1] != -1){
+    if((*PC)[0]+1 < 256 && (*byte)[(*PC)[1]][(*PC)[0]+1] != -1 && (*bit)[(*PC)[1]][(*PC)[0]+1] != -1){
         (*PC)[0] += 1;
         return 0;
     }else if ((*PC)[1] +1 < 8 && (*func)[(*PC)[1] +1][0] !=-1){
@@ -225,11 +225,12 @@ int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
 }
 
 int main(int argc, char **argv){
-    if (argc < 2){
-        return 1;
-    }
+//    if (argc < 2){
+//        return 1;
+//    }
 
-    FILE *bf = fopen(argv[1],"rb");
+    //FILE *bf = fopen(argv[1],"rb");
+    FILE *bf = fopen("tests/sample_program.x2017","rb");
 
     fseek(bf,0,SEEK_END);
 
@@ -250,7 +251,7 @@ int main(int argc, char **argv){
     while(status != -1){
         printf("FUNC LABEL %d\n",func[PC[1]][0]);
         for(int i = 0; i < func[PC[1]][1]; i++) {
-            memccpy(&CUR_PC,&PC,3,sizeof(int16_t));
+            memccpy(&CUR_PC,&PC,2,sizeof(int16_t));
             status = update_pc(&PC,&ins_byte,&ins_bit,&func);
             read_op(bf, ins_byte[CUR_PC[1]][CUR_PC[0]], ins_bit[CUR_PC[1]][CUR_PC[0]], asmcode);
             printf("    %s", asmcode);
