@@ -217,8 +217,8 @@ int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
     if((*PC)[0]+1 < 256 && (*byte)[(*PC)[1]][(*PC)[0]+1] != -1 && (*bit)[(*PC)[1]][(*PC)[0]+1] != -1){
         (*PC)[0] += 1;
         return 0;
-    }else if ((*PC)[1] +1 < 8 && (*func)[(*PC)[1] +1][0] !=-1){
-        (*PC)[1] += 1;
+    }else if ((*PC)[1] -1 >= 0){
+        (*PC)[1] -= 1;
         (*PC)[0] = 0;
         return 1;
     }else{
@@ -227,13 +227,13 @@ int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
 }
 
 int main(int argc, char **argv){
-    if (argc < 2){
-        return 1;
-    }
+//    if (argc < 2){
+//        return 1;
+//    }
+//
+//    FILE *bf = fopen(argv[1],"rb");
 
-    FILE *bf = fopen(argv[1],"rb");
-
-//    FILE *bf = fopen("tests/sp2.x2017","rb");
+    FILE *bf = fopen("tests/sp2.x2017","rb");
 
     fseek(bf,0,SEEK_END);
 
@@ -250,6 +250,15 @@ int main(int argc, char **argv){
     memset(&ins_bit,-1, 8*256*sizeof(int16_t));
     memset(&func,-1, 8*2*sizeof(int16_t));
     fetch_next_func(bf,&ins_byte,&ins_bit,&func);
+
+    for(int i = 0; i < 256; i++){
+        if(func[i][0] != -1){
+            PC[1] = i;
+        }else{
+            break;
+        }
+    }
+
     int status = 0;
     while(status != -1){
         printf("FUNC LABEL %d\n",func[PC[1]][0]);
