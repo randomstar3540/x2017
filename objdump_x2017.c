@@ -66,7 +66,7 @@ int read_addr(FILE* bf, int16_t *fsize,u_int8_t type, u_int8_t *result, u_int16_
         case 0b10:
             read_bit_reverse(bf,fsize,buffer, bptr, 5, result); //Stk
             if (*result >25){
-                *result -=25
+                *result -=25;
                 sprintf(addr," STK %c",*result + 'a');
             }else{
                 sprintf(addr," STK %c",*result + 'A');
@@ -75,7 +75,7 @@ int read_addr(FILE* bf, int16_t *fsize,u_int8_t type, u_int8_t *result, u_int16_
         case 0b11:
             read_bit_reverse(bf,fsize,buffer, bptr, 5, result); //Ptr
             if (*result >25){
-                *result -=25
+                *result -=25;
                 sprintf(addr," PTR %c",*result + 'a');
             }else{
                 sprintf(addr," PTR %d",*result+ 'A');
