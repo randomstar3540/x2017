@@ -78,7 +78,7 @@ int read_addr(FILE* bf, int16_t *fsize,u_int8_t type, u_int8_t *result, u_int16_
                 *result -=25;
                 sprintf(addr," PTR %c",*result + 'a');
             }else{
-                sprintf(addr," PTR %d",*result+ 'A');
+                sprintf(addr," PTR %c",*result + 'A');
             }
             break;
         default:
