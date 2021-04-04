@@ -261,13 +261,11 @@ int fetch_next_func(FILE* bf, int16_t (*byte)[32], int16_t (*bit)[32], int16_t (
 }
 
 int main(int argc, char **argv){
-//    if (argc < 2){
-//        return 1;
-//    }
-//
-//    FILE *bf = fopen(argv[1],"rb");
+    if (argc < 2){
+        return 1;
+    }
 
-    FILE *bf = fopen("tests/sp2.x2017","rb");
+    FILE *bf = fopen(argv[1],"rb");
 
     fseek(bf,0,SEEK_END);
 
