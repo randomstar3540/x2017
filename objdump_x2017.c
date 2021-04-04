@@ -183,7 +183,7 @@ int fetch_op(u_int8_t opcode, FILE* bf, int16_t *fsize,u_int16_t *buffer, u_int8
 
 
 
-int fetch_next_func(FILE* bf, int16_t (*byte)[8][256], int16_t (*bit)[8][256], int16_t (*func)[8][2]){
+int fetch_next_func(FILE* bf, int16_t (*byte)[8][32], int16_t (*bit)[8][32], int16_t (*func)[8][2]){
     fseek(bf,0,SEEK_END);
     int16_t fsize = ftell(bf);
     u_int16_t buffer;
@@ -213,8 +213,8 @@ int fetch_next_func(FILE* bf, int16_t (*byte)[8][256], int16_t (*bit)[8][256], i
     return 0;
 }
 
-int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][256], int16_t (*bit)[8][256], int16_t (*func)[8][2]){
-    if((*PC)[0]+1 < 256 && (*byte)[(*PC)[1]][(*PC)[0]+1] != -1 && (*bit)[(*PC)[1]][(*PC)[0]+1] != -1){
+int update_pc(int16_t(*PC)[2],int16_t (*byte)[8][32], int16_t (*bit)[8][32], int16_t (*func)[8][2]){
+    if((*PC)[0]+1 < 32 && (*byte)[(*PC)[1]][(*PC)[0]+1] != -1 && (*bit)[(*PC)[1]][(*PC)[0]+1] != -1){
         (*PC)[0] += 1;
         return 0;
     }else if ((*PC)[1] -1 >= 0){
@@ -242,16 +242,16 @@ int main(int argc, char **argv){
 
     char asmcode[32] = "";
 
-    int16_t ins_bit[8][256];
-    int16_t ins_byte[8][256];
+    int16_t ins_bit[8][32];
+    int16_t ins_byte[8][32];
     int16_t func[8][2];
 
-    memset(&ins_byte,-1, 8*256*sizeof(int16_t));
-    memset(&ins_bit,-1, 8*256*sizeof(int16_t));
+    memset(&ins_byte,-1, 8*32*sizeof(int16_t));
+    memset(&ins_bit,-1, 8*32*sizeof(int16_t));
     memset(&func,-1, 8*2*sizeof(int16_t));
     fetch_next_func(bf,&ins_byte,&ins_bit,&func);
 
-    for(int i = 0; i < 256; i++){
+    for(int i = 0; i < 32; i++){
         if(func[i][0] != -1){
             PC[1] = i;
         }else{

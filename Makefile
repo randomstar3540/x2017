@@ -3,8 +3,8 @@ CFLAGS=-fsanitize=address -Wvla -Wall -Werror -g -std=gnu11 -lasan
 
 # fill in all your make rules
 
-vm_x2017: 
-	echo "vm_x2017"
+vm_x2017: vm_x2017.c
+	$(CC) $(CFLAGS) $^ -o $@
 
 objdump_x2017: objdump_x2017.c
 	$(CC) $(CFLAGS) $^ -o $@
