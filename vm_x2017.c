@@ -64,17 +64,31 @@ int PC_write(u_int8_t func, u_int8_t ins, u_int8_t *PC){
     return 0;
 }
 
+void debug(u_int8_t *reg, u_int8_t *RAM){
+    printf("PC Value: F %d, I %d\n", PC_readFunc(reg[7]), PC_readIns(reg[7]));
+    for(int i = 0; i < 8; i ++){
+        printf("Reg%d: %x\n",i,reg[i]);
+    }
+    for(int i = 0; i < 32; i ++){
+        for(int j = 0; j < 8; j++){
+            printf("RAM %d: %x     ",i*8 + j, RAM[i*8 + j]);
+        }
+        printf("\n");
+    }
+}
 
-int update_pc(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6]){
+int update_pc(u_int8_t *reg, u_int8_t (*code)[][32][6]){
     if (PC_readIns(reg[7]) != 0b11111){
+
         PC_write(PC_readFunc(reg[7]),PC_readIns(reg[7]) +1, &(reg[7]));
-        if((*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][5] !=1 ){
+
+        if((*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][5] != 1 ){
             if(PC_readFunc(reg[7])==0){
                 reg[4] = 2;
                 return 0;
             }
-            return -1;
         }
+        return 0;
     }
     return -1;
 }
@@ -87,9 +101,9 @@ u_int8_t read_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr){
             //Reg
             return reg[addr];
         case 0b10:
-            return RAM[reg[6]+addr]; // STK
+            return RAM[reg[6]-addr]; // STK
         case 0b11:
-            return RAM[RAM[reg[6]+addr]]; // Ptr
+            return RAM[RAM[reg[6]-addr]]; // Ptr
         default:
             return -1;
     }
@@ -103,10 +117,10 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr, u_int
             reg[addr] = val;//Reg
             return 0;
         case 0b10:
-            RAM[reg[6]+addr] = val; // STK
+            RAM[reg[6]-addr] = val; // STK
             return 0;
         case 0b11://Ptr
-            return 0;
+            RAM[RAM[reg[6]-addr]] = val;
         default:
             return -1;
     }
@@ -125,33 +139,31 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int16_t (
     second_t = (*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][3];
     second_v = (*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][4];
 
-    update_pc(reg,RAM,code);
+    update_pc(reg,code);
 
     switch(opcode){
         case 0b000: //MOV
             write_addr(reg,RAM,first_t,first_v,read_addr(reg,RAM,second_t,second_v));
             return 0;
         case 0b001: //CAL
-            reg[6]+= 33;
-            RAM[reg[6]] = reg[7];
-            for(int  i = 0; i < 8; i ++) {
-                if ((*st)[i][0] != -1 && (*st)[i][0] == first_v) {
-                    PC_write(i, 0, &(reg[7]));
-                    return 0;
-                }
+            reg[6]-= 33;
+            RAM[reg[6]+1] = reg[7];
+            if ((*st)[first_v][0] != -1) {
+                PC_write((*st)[first_v][0], 0, &(reg[7]));
+                return 0;
             }
             return 3;
         case 0b010: //RET
-            if(PC_readFunc(reg[7])==0){
+            if(PC_readFunc(reg[7])==(*st)[0][0]){
                 reg[4] = 1;
                 return 0;
             }
             reg[4] = 0;
-            reg[7] = RAM[reg[6]];
-            reg[6] -=33;
+            reg[7] = RAM[reg[6]+1];
+            reg[6] +=33;
             return 0;
         case 0b011: //REF
-            write_addr(reg,RAM,first_t,first_v,reg[6] + second_v);
+            write_addr(reg,RAM,first_t,first_v,reg[6] - second_v);
             return 0;
         case 0b100: //ADD
             write_addr(reg,RAM,first_t,first_v,reg[first_v]+reg[second_v]);
@@ -253,8 +265,8 @@ int fetch_next_func(FILE* bf, int16_t (*byte)[32], int16_t (*bit)[32], int16_t (
             fetch_op(bf,&fsize,&buffer,&bit_ptr, &code[counter][i][0],opcode);
         }
         read_bit_reverse(bf,&fsize,&buffer, &bit_ptr, 3, &func_label);
-        func[counter][0] =func_label;
-        func[counter][1] =ins_num;
+        func[func_label][0] =counter;
+        func[func_label][1] =ins_num;
         counter ++;
     }
     return 0;
@@ -283,24 +295,18 @@ int main(int argc, char **argv){
     u_int8_t reg[8];
     u_int8_t RAM[256];
 
+    memset(&reg,0, 8*sizeof(u_int8_t));
+    memset(&RAM,0, 256*sizeof(u_int8_t));
 
-    for(int i = 0; i < 32; i++){
-        if(func[i][0] != -1){
-            if (func[i][0] == 0){
-                PC_write(i,0,&reg[7]);
-            }
-        }else{
-            break;
-        }
+    if(func[0][0] != -1){
+        PC_write(func[0][0],0,&reg[7]);
     }
+    reg[6]=255;
 
-    while(reg[6] == 0){
-        printf("FUNC LABEL %d  ",PC_readFunc(reg[7]));
-        printf(" INS %d\n",PC_readIns(reg[7]));
+    while(reg[4] == 0){
+//        debug(reg,RAM);
         handle_op(reg,RAM,&code_space,&func);
     }
-
-
     return 0;
 }
 
