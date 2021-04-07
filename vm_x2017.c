@@ -146,6 +146,10 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int16_t (
             write_addr(reg,RAM,first_t,first_v,read_addr(reg,RAM,second_t,second_v));
             return 0;
         case 0b001: //CAL
+            if(reg[6]<33){
+                reg[4] = 3;
+                return 0;
+            }
             reg[6]-= 33;
             RAM[reg[6]+1] = reg[7];
             if ((*st)[first_v][0] != -1) {
