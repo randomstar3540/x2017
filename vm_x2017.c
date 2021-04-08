@@ -124,10 +124,10 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr, u_int
 
 int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*ft)[][2]){
     u_int8_t opcode;
-    u_int8_t first_v;
     u_int8_t first_t;
-    u_int8_t second_v;
+    u_int8_t first_v;
     u_int8_t second_t;
+    u_int8_t second_v;
 
     opcode = (*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][0];
     first_t = (*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][1];
