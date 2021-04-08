@@ -201,6 +201,8 @@ int fetch_addr(FILE* bf, u_int8_t type, u_int8_t *result,int8_t *st, u_int8_t *s
                 st[*result] = *sc;
                 *result = *sc;
                 *sc += 1;
+            }else{
+                *result = st[*result];
             }
             break;
         default:
