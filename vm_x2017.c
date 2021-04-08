@@ -18,37 +18,33 @@ void printBits(size_t const size, void const * const ptr)
     puts("");
 }
 
-int readbyte(FILE* bfile, int16_t *filesize, int16_t readsize, u_int16_t *result){
-    if (*filesize - readsize < 0){
+int readbyte(FILE* bfile, u_int8_t *bit_ptr, u_int8_t *buffer){
+    if (ftell(bfile) < 1){
         return -1;
     }
-    fseek(bfile,-readsize,SEEK_CUR);
-    fread(result,readsize,1,bfile); //处理
-    fseek(bfile,-readsize,SEEK_CUR);
-    *filesize -= readsize;
+    fseek(bfile,-1,SEEK_CUR);
+    fread(buffer,1,1,bfile); //处理
+    fseek(bfile,-1,SEEK_CUR);
+    *bit_ptr = 0;
     return 0;
 }
 
-int relocate_buffer(FILE* bfile, int16_t *filesize, u_int16_t *buffer, u_int8_t *bptr){
-    if(*bptr >= 8){
-        u_int16_t byte = 0;
-        if (readbyte(bfile,filesize,1,&byte) ==0){
-            *buffer = *buffer >> 8;
-            *buffer = (byte<<8) | *buffer;
-            *bptr -= 8;
+int readbits(FILE* bfile, int numbers, u_int8_t *result) {
+    static u_int8_t bit_ptr = 8;
+    static u_int8_t buffer = 8;
+
+    *result = 0;
+
+    for (int i = 0; i < numbers; i++){
+        if (bit_ptr == 8) {
+            if (readbyte(bfile, &bit_ptr, &buffer) == -1) {
+                return -1;
+            }
         }
+        *result = *result | ((buffer >> bit_ptr )&1) << i;
+        bit_ptr++;
     }
-    return 0;
-}
 
-int read_bit_reverse(FILE* bf, int16_t *fsize,u_int16_t *buffer, u_int8_t *bptr, int bits, u_int8_t *result){
-    u_int16_t buffer_cpy = *buffer;
-    buffer_cpy = buffer_cpy << (16 - bits - *bptr);
-    buffer_cpy = buffer_cpy >> (16 - bits - *bptr);
-    buffer_cpy = buffer_cpy >> *bptr;
-    *result = buffer_cpy;
-    *bptr += bits;
-    relocate_buffer(bf,fsize,buffer,bptr);
     return 0;
 }
 
@@ -126,7 +122,7 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr, u_int
     }
 }
 
-int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int16_t (*st)[][2]){
+int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*ft)[][2]){
     u_int8_t opcode;
     u_int8_t first_v;
     u_int8_t first_t;
@@ -152,13 +148,13 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int16_t (
             }
             reg[6]-= 33;
             RAM[reg[6]+1] = reg[7];
-            if ((*st)[first_v][0] != -1) {
-                PC_write((*st)[first_v][0], 0, &(reg[7]));
+            if ((*ft)[first_v][0] != -1) {
+                PC_write((*ft)[first_v][0], 0, &(reg[7]));
                 return 0;
             }
             return 3;
         case 0b010: //RET
-            if(PC_readFunc(reg[7])==(*st)[0][0]){
+            if(PC_readFunc(reg[7])==(*ft)[0][0]){
                 reg[4] = 1;
                 return 0;
             }
@@ -190,26 +186,30 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int16_t (
     }
 }
 
-int fetch_addr(FILE* bf, int16_t *fsize, u_int16_t *buffer, u_int8_t type, u_int8_t *bptr, u_int8_t *result){
+int fetch_addr(FILE* bf, u_int8_t type, u_int8_t *result,int8_t *st, u_int8_t *sc){
     switch (type) {
         case 0b00:
-            read_bit_reverse(bf,fsize,buffer, bptr, 8, result); //Val
+            readbits(bf,8, result); //Val
             break;
         case 0b01:
-            read_bit_reverse(bf,fsize,buffer, bptr, 3, result); //Reg
+            readbits(bf,3, result); //Reg
             break;
         case 0b10:
         case 0b11:
-            read_bit_reverse(bf,fsize,buffer, bptr, 5, result); //Stk,Ptr
+            readbits(bf,5, result); //Stk, Ptr
+            if (st[*result] == -1){
+                st[*result] = *sc;
+                *result = *sc;
+                *sc += 1;
+            }
             break;
         default:
             return -1;
     }
-    relocate_buffer(bf, fsize, buffer, bptr);
     return 0;
 }
 
-int fetch_op(FILE* bf, int16_t *fsize,u_int16_t *buffer, u_int8_t *bptr, u_int8_t *code,u_int8_t op){
+int fetch_op(FILE* bf, u_int8_t *code, int8_t *st , u_int8_t op, u_int8_t *sc){
     u_int8_t opcode = op;
     u_int8_t first_v;
     u_int8_t first_t;
@@ -217,11 +217,11 @@ int fetch_op(FILE* bf, int16_t *fsize,u_int16_t *buffer, u_int8_t *bptr, u_int8_
     u_int8_t second_t;
 
     if(opcode == 0b000 || opcode == 0b011 || opcode== 0b100){
-        read_bit_reverse(bf,fsize,buffer,bptr, 2, &first_t);
-        fetch_addr(bf,fsize,buffer,first_t,bptr,&first_v);
+        readbits(bf,2, &first_t);
+        fetch_addr(bf,first_t,&first_v, st, sc);
 
-        read_bit_reverse(bf,fsize,buffer, bptr, 2, &second_t);
-        fetch_addr(bf,fsize,buffer,second_t,bptr,&second_v);
+        readbits(bf,2, &second_t);
+        fetch_addr(bf,second_t,&second_v ,st, sc);
 
         code[1] = first_t;
         code[2] = first_v;
@@ -230,8 +230,8 @@ int fetch_op(FILE* bf, int16_t *fsize,u_int16_t *buffer, u_int8_t *bptr, u_int8_
         code[5] = 1;
 
     }else if(opcode == 0b001 || opcode == 0b101 || opcode == 0b110 || opcode == 0b111){
-        read_bit_reverse(bf,fsize,buffer, bptr, 2, &first_t);
-        fetch_addr(bf,fsize,buffer,first_t,bptr,&first_v);
+        readbits(bf,2, &first_t);
+        fetch_addr(bf,first_t,&first_v ,st, sc);
 
         code[1] = first_t;
         code[2] = first_v;
@@ -245,56 +245,52 @@ int fetch_op(FILE* bf, int16_t *fsize,u_int16_t *buffer, u_int8_t *bptr, u_int8_
 
 
 
-int fetch_next_func(FILE* bf, int16_t (*byte)[32], int16_t (*bit)[32], int16_t (*func)[2], u_int8_t (*code)[32][6]){
-    fseek(bf,0,SEEK_END);
-    int16_t fsize = ftell(bf);
-    u_int16_t buffer;
-    u_int8_t bit_ptr = 0;
+int fetch_next_func(FILE* bf, int8_t (*st)[32],int8_t (*ft)[2], u_int8_t (*code)[32][6]){
     u_int8_t ins_num;
     u_int8_t opcode;
-
     u_int8_t func_label;
-
-    readbyte(bf,&fsize,2,&buffer);
-    buffer = ((buffer & 0xff) << 8) | ((buffer & 0xff00) >> 8);
+    u_int8_t stack_counter;
     int counter = 0;
-    while(fsize > 0){
-        read_bit_reverse(bf,&fsize,&buffer,&bit_ptr,5, &ins_num);
+    while(ftell(bf) > 0){
+        readbits(bf,5, &ins_num);
+
+        stack_counter = 0;
+
         for(int i = ins_num -1; i >= 0; i--) {
-            byte[counter][i] = fsize+1;
-            bit[counter][i] = bit_ptr;
-//            printf("%d,%d\n",fsize + 1, bit_ptr);
-            read_bit_reverse(bf,&fsize,&buffer, &bit_ptr, 3, &opcode);
+            readbits(bf,3, &opcode);
             code[counter][i][0] = opcode;
-            fetch_op(bf,&fsize,&buffer,&bit_ptr, &code[counter][i][0],opcode);
+            fetch_op(bf,&code[counter][i][0],&st[func_label][0],opcode, &stack_counter);
         }
-        read_bit_reverse(bf,&fsize,&buffer, &bit_ptr, 3, &func_label);
-        func[func_label][0] =counter;
-        func[func_label][1] =ins_num;
+        readbits(bf,3, &func_label);
+        ft[func_label][0] =counter;
+        ft[func_label][1] =ins_num;
         counter ++;
     }
     return 0;
 }
 
 int main(int argc, char **argv){
-    if (argc < 2){
+    if (argc != 2){
+        printf("Please Provide a <filename> as command line arguments");
         return 1;
     }
 
     FILE *bf = fopen(argv[1],"rb");
+    if(bf == NULL){
+        printf("File Not Found!\n");
+        return 1;
+    }
 
     fseek(bf,0,SEEK_END);
 
-    int16_t ins_bit[8][32];
-    int16_t ins_byte[8][32];
-    int16_t func[8][2];
+    int8_t symbol_table[8][32];
+    int8_t function_table[8][2];
     u_int8_t code_space[8][32][6];
 
-    memset(&ins_byte,-1, 8*32*sizeof(int16_t));
-    memset(&ins_bit,-1, 8*32*sizeof(int16_t));
-    memset(&func,-1, 8*2*sizeof(int16_t));
+    memset(&symbol_table,-1, 8*32*sizeof(int8_t));
+    memset(&function_table,-1, 8*2*sizeof(int8_t));
     memset(&code_space,0, 8*32*6*sizeof(u_int8_t));
-    fetch_next_func(bf,ins_byte,ins_bit,func,code_space);
+    fetch_next_func(bf,symbol_table,function_table ,code_space);
 
     u_int8_t reg[8];
     u_int8_t RAM[256];
@@ -302,14 +298,14 @@ int main(int argc, char **argv){
     memset(&reg,0, 8*sizeof(u_int8_t));
     memset(&RAM,0, 256*sizeof(u_int8_t));
 
-    if(func[0][0] != -1){
-        PC_write(func[0][0],0,&reg[7]);
+    if(function_table[0][0] != -1){
+        PC_write(function_table[0][0],0,&reg[7]);
     }
     reg[6]=255;
 
     while(reg[4] == 0){
 //        debug(reg,RAM);
-        handle_op(reg,RAM,&code_space,&func);
+        handle_op(reg,RAM,&code_space,&function_table);
     }
     return 0;
 }
