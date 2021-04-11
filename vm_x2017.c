@@ -97,28 +97,47 @@ u_int8_t read_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr){
             //Reg
             return reg[addr];
         case 0b10:
+            if (reg[6]<addr){
+                reg[4]=3;
+                return 1;
+            }
             return RAM[reg[6]-addr]; // STK
         case 0b11:
+            if (reg[6]<addr){
+                reg[4]=3;
+                return 1;
+            }
             return RAM[RAM[reg[6]-addr]]; // Ptr
         default:
-            return -1;
+            return 1;
     }
 }
 
 int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr, u_int8_t val){
     switch (type) {
         case 0b00:
-            return -1;//Val
+            return 1;//Val
         case 0b01:
             reg[addr] = val;//Reg
             return 0;
         case 0b10:
+            if (reg[6]<addr){
+                reg[4]=3;
+                return 1;
+            }
+            if (reg[6]-addr < reg[5]){
+                reg[5]=reg[6]-addr;
+            }
             RAM[reg[6]-addr] = val; // STK
             return 0;
         case 0b11://Ptr
+            if (reg[6]<addr){
+                reg[4]=3;
+                return 1;
+            }
             RAM[RAM[reg[6]-addr]] = val;
         default:
-            return -1;
+            return 1;
     }
 }
 
@@ -142,17 +161,18 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
             write_addr(reg,RAM,first_t,first_v,read_addr(reg,RAM,second_t,second_v));
             return 0;
         case 0b001: //CAL
-            reg[6]-= 33;
-            if(reg[6]<33){
+            if(reg[5]<3){
                 reg[4] = 3;
                 return 0;
             }
+            reg[6] = reg[5] - 2;
+            reg[5] = reg[6];
             RAM[reg[6]+1] = reg[7];
             if ((*ft)[first_v][0] != -1) {
                 PC_write((*ft)[first_v][0], 0, &(reg[7]));
                 return 0;
             }
-            return 3;
+            return 0;
         case 0b010: //RET
             if(PC_readFunc(reg[7])==(*ft)[0][0]){
                 reg[4] = 1;
@@ -304,6 +324,7 @@ int main(int argc, char **argv){
         PC_write(function_table[0][0],0,&reg[7]);
     }
     reg[6]=255;
+    reg[5]=255;
 
     while(reg[4] == 0){
 //        debug(reg,RAM);
