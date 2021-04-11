@@ -192,6 +192,8 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
         case 0b011: //REF
             if(second_t == 0b10){
                 write_addr(reg,RAM,first_t,first_v,reg[6] - second_v);
+            } else {
+                printf("p");
             }
             return 0;
         case 0b100: //ADD
