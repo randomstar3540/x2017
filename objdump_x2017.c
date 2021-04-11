@@ -260,10 +260,10 @@ int main(int argc, char **argv){
     }
 
     FILE *bf = fopen(argv[1],"rb");
-    if(bf == NULL){
-        printf("File Not Found!\n");
-        return 1;
-    }
+//    if(bf == NULL){
+//        printf("File Not Found!\n");
+//        return 1;
+//    }
 
     fseek(bf,0,SEEK_END);
 
