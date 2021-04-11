@@ -336,7 +336,7 @@ int main(int argc, char **argv){
     reg[5]=255;
 
     while(reg[4] == 0){
-        debug(reg,RAM);
+//        debug(reg,RAM);
         handle_op(reg,RAM,&code_space,&function_table);
     }
     if(reg[4]>1){
