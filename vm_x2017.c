@@ -63,11 +63,11 @@ int PC_write(u_int8_t func, u_int8_t ins, u_int8_t *PC){
 void debug(u_int8_t *reg, u_int8_t *RAM){
     printf("PC Value: F %d, I %d\n", PC_readFunc(reg[7]), PC_readIns(reg[7]));
     for(int i = 0; i < 8; i ++){
-        printf("Reg%d: %x\n",i,reg[i]);
+        printf("Reg%d: %d\n",i,reg[i]);
     }
     for(int i = 0; i < 32; i ++){
         for(int j = 0; j < 8; j++){
-            printf("RAM %d: %x     ",i*8 + j, RAM[i*8 + j]);
+            printf("RAM %d: %d     ",i*8 + j, RAM[i*8 + j]);
         }
         printf("\n");
     }
@@ -135,6 +135,9 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr, u_int
                 reg[4]=3;
                 return 1;
             }
+            if (reg[6]-addr < reg[5]){
+                reg[5]=reg[6]-addr;
+            }
             RAM[RAM[reg[6]-addr]] = val;
         default:
             return 1;
@@ -161,13 +164,16 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
             write_addr(reg,RAM,first_t,first_v,read_addr(reg,RAM,second_t,second_v));
             return 0;
         case 0b001: //CAL
-            if(reg[5]<3){
+            if(reg[5]<=4){
                 reg[4] = 3;
                 return 0;
             }
-            reg[6] = reg[5] - 2;
+            RAM[reg[5]-1] = reg[5];
+            RAM[reg[5]-2] = reg[6];
+            RAM[reg[5]-3] = reg[7];
+            reg[6] = reg[5] - 4;
             reg[5] = reg[6];
-            RAM[reg[6]+1] = reg[7];
+
             if ((*ft)[first_v][0] != -1) {
                 PC_write((*ft)[first_v][0], 0, &(reg[7]));
                 return 0;
@@ -180,7 +186,8 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
             }
             reg[4] = 0;
             reg[7] = RAM[reg[6]+1];
-            reg[6] +=33;
+            reg[5] = RAM[reg[6]+3];
+            reg[6] = RAM[reg[6]+2];
             return 0;
         case 0b011: //REF
             write_addr(reg,RAM,first_t,first_v,reg[6] - second_v);
