@@ -254,10 +254,10 @@ int fetch_next_func(FILE* bf, int8_t (*st)[32],int8_t (*ft)[2], u_int8_t (*code)
 }
 
 int main(int argc, char **argv){
-    if (argc != 2){
-        printf("Please Provide a <filename> as command line arguments");
-        return 1;
-    }
+//    if (argc != 2){
+//        printf("Please Provide a <filename> as command line arguments");
+//        return 1;
+//    }
 
     FILE *bf = fopen(argv[1],"rb");
 //    if(bf == NULL){
