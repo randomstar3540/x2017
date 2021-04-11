@@ -142,11 +142,11 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
             write_addr(reg,RAM,first_t,first_v,read_addr(reg,RAM,second_t,second_v));
             return 0;
         case 0b001: //CAL
+            reg[6]-= 33;
             if(reg[6]<33){
                 reg[4] = 3;
                 return 0;
             }
-            reg[6]-= 33;
             RAM[reg[6]+1] = reg[7];
             if ((*ft)[first_v][0] != -1) {
                 PC_write((*ft)[first_v][0], 0, &(reg[7]));
@@ -308,6 +308,9 @@ int main(int argc, char **argv){
     while(reg[4] == 0){
 //        debug(reg,RAM);
         handle_op(reg,RAM,&code_space,&function_table);
+    }
+    if(reg[4]>1){
+        return 1;
     }
     return 0;
 }
