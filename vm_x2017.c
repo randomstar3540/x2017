@@ -130,7 +130,7 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr, u_int
             }
             RAM[reg[6]-addr] = val; // STK
             return 0;
-        case 0b11://Ptr
+        case 0b11:
             if (reg[6]<addr){
                 reg[4]=3;
                 return 1;
@@ -138,7 +138,7 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr, u_int
             if (reg[6]-addr < reg[5]){
                 reg[5]=reg[6]-addr;
             }
-            RAM[RAM[reg[6]-addr]] = val;
+            RAM[RAM[reg[6]-addr]] = val; //Ptr
         default:
             return 1;
     }
@@ -190,8 +190,13 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
             reg[6] = RAM[reg[6]+2];
             return 0;
         case 0b011: //REF
-            write_addr(reg,RAM,first_t,first_v,reg[6] - second_v);
-            return 0;
+            if (second_t == 0b10){
+                write_addr(reg,RAM,first_t,first_v,reg[6] - second_v);
+            } else if (second_t == 0b11){
+                write_addr(reg,RAM,first_t,first_v,read_addr(reg,RAM,second_t,second_v));
+            } else{
+                return 1;
+            }
         case 0b100: //ADD
             write_addr(reg,RAM,first_t,first_v,reg[first_v]+reg[second_v]);
             return 0;
