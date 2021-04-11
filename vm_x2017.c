@@ -190,7 +190,9 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
             reg[6] = RAM[reg[6]+2];
             return 0;
         case 0b011: //REF
-            write_addr(reg,RAM,first_t,first_v,reg[6] - second_v);
+            if(second_t == 0b10){
+                write_addr(reg,RAM,first_t,first_v,reg[6] - second_v);
+            }
             return 0;
         case 0b100: //ADD
             write_addr(reg,RAM,first_t,first_v,reg[first_v]+reg[second_v]);
@@ -334,7 +336,7 @@ int main(int argc, char **argv){
     reg[5]=255;
 
     while(reg[4] == 0){
-//        debug(reg,RAM);
+        debug(reg,RAM);
         handle_op(reg,RAM,&code_space,&function_table);
     }
     if(reg[4]>1){
