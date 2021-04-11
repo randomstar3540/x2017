@@ -70,7 +70,7 @@ u_int8_t print_addr(u_int8_t type, u_int8_t addr){
             break;
         case 0b10: // STK
             if (addr >25){
-                addr -=25;
+                addr -=26;
                 printf(" STK %c",addr + 'a');
             }else{
                 printf(" STK %c",addr + 'A');
@@ -78,7 +78,7 @@ u_int8_t print_addr(u_int8_t type, u_int8_t addr){
             break;
         case 0b11: // Ptr
             if (addr >25){
-                addr -=25;
+                addr -=26;
                 printf(" PTR %c",addr + 'a');
             }else{
                 printf(" PTR %c",addr + 'A');
