@@ -193,7 +193,7 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
             if(second_t == 0b10){
                 write_addr(reg,RAM,first_t,first_v,reg[6] - second_v);
             } else {
-                printf("p");
+                write_addr(reg,RAM,first_t,first_v,read_addr(reg,RAM,0b10,second_v));
             }
             return 0;
         case 0b100: //ADD
