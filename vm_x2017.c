@@ -131,7 +131,6 @@ int fetch_next_func(FILE* bf, int8_t (*st)[32],int8_t (*ft)[2], u_int8_t (*code)
         if(readbits(bf,5, &ins_num)==-1){
             return -1;
         }
-        printf("%d",ins_num);
         stack_counter = 0;
 
         for(int i = ins_num -1; i >= 0; i--) {
@@ -381,7 +380,7 @@ int main(int argc, char **argv){
 
     memset(&reg,0, 8*sizeof(u_int8_t));
     memset(&RAM,0, 256*sizeof(u_int8_t));
-
+    printf("b");
     if(function_table[0][0] != -1){
         PC_write(function_table[0][0],0,&reg[7]);
     }
