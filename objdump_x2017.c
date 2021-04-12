@@ -298,7 +298,7 @@ int main(int argc, char **argv){
         printf("Not an x2017 formatted file\n");
         return 1;
     }
-
+    printf("format");
     u_int8_t PC[2] = {0,0};
     for(int i = 0; i < 8; i++){
         if(function_table[i][0] != -1){
