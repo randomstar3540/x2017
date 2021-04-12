@@ -131,7 +131,7 @@ int fetch_next_func(FILE* bf, int8_t (*st)[32],int8_t (*ft)[2], u_int8_t (*code)
         if(readbits(bf,5, &ins_num)==-1){
             return -1;
         }
-
+        printf("%d",ins_num);
         stack_counter = 0;
 
         for(int i = ins_num -1; i >= 0; i--) {
@@ -375,7 +375,6 @@ int main(int argc, char **argv){
         printf("Not an x2017 formatted file\n");
         return 1;
     }
-    printf("f");
 
     u_int8_t reg[8];
     u_int8_t RAM[256];
