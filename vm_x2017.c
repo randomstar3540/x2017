@@ -221,7 +221,7 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr, u_int
             reg[4] = 5;
             return 1;//Val
         case 0b01:
-            if(addr > 3){
+            if(addr > 3 && addr != 7){
                 reg[4] = 4;
                 return 1;
             }
@@ -322,7 +322,7 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
                 reg[4]=6;
                 return 1;
             }
-            if(first_v>3){
+            if(first_v>3&&first_v!=7){
                 reg[4]=4;
                 return 1;
             }
@@ -333,7 +333,7 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
                 reg[4]=6;
                 return 1;
             }
-            if(first_v>3){
+            if(first_v>3&&first_v!=7){
                 reg[4]=4;
                 return 1;
             }
@@ -380,7 +380,7 @@ int main(int argc, char **argv){
 
     memset(&reg,0, 8*sizeof(u_int8_t));
     memset(&RAM,0, 256*sizeof(u_int8_t));
-    printf("b");
+
     if(function_table[0][0] != -1){
         PC_write(function_table[0][0],0,&reg[7]);
     }
