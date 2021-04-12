@@ -375,6 +375,7 @@ int main(int argc, char **argv){
         printf("Not an x2017 formatted file\n");
         return 1;
     }
+    printf("f");
 
     u_int8_t reg[8];
     u_int8_t RAM[256];
