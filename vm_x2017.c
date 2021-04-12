@@ -44,7 +44,6 @@ int readbits(FILE* bfile, int numbers, u_int8_t *result) {
         *result = *result | ((buffer >> bit_ptr )&1) << i;
         bit_ptr++;
     }
-
     return 0;
 }
 
@@ -341,7 +340,8 @@ int main(int argc, char **argv){
 //        debug(reg,RAM);
         handle_op(reg,RAM,&code_space,&function_table);
     }
-    if(reg[4]>1){
+    if(reg[4]==3){
+        printf("Stack Overflow detected!");
         return 1;
     }
     return 0;
