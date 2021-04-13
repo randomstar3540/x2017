@@ -6,7 +6,7 @@ LDFLAGS=-Wl,-Map=object.map,--cref,--gc-section
 
 vm_x2017: fetch_x2017.c vm_x2017.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
-	objcopy -R .gnu.version -R .comment -R .gnu.hash -R .note.ABI-tag -R .note.gnu.build-id -R .note.gnu.property -R .eh_frame -R .plt vm_x2017
+	objcopy -R .gnu.version -R .comment -R .gnu.hash -R .note.ABI-tag -R .note.gnu.build-id -R .note.gnu.property -R .eh_frame vm_x2017
 
 objdump_x2017: fetch_x2017.c objdump_x2017.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
