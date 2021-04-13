@@ -27,21 +27,21 @@ int fetch_code(FILE *bf, int (*st)[32], int (*ft)[2], u_int8_t (*code)[32][6]) {
          * If their are any unread byte, continue the loop
          * unless we already read 8 functions
          */
-        if (readbits(bf, 5, &ins_num) == -1) {
+        if (read_bits(bf, 5, &ins_num) == -1) {
             //read the instruction count, raise error if any
             return -1;
         }
         stack_counter = 0;
 
         for (int i = ins_num - 1; i >= 0; i--) {
-            if (readbits(bf, 3, &opcode) == -1) {
+            if (read_bits(bf, 3, &opcode) == -1) {
                 // read operation code, raise error if any
                 return -1;
             }
             code[counter][i][0] = opcode;
             fetch_op(bf, &code[counter][i][0], &st[func_label][0], opcode, &stack_counter);
         }
-        if (readbits(bf, 3, &func_label) == -1) {
+        if (read_bits(bf, 3, &func_label) == -1) {
             // read the function label, raise error if any
             return -1;
         }

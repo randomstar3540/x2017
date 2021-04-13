@@ -27,21 +27,21 @@ int fetch_code(FILE *bf,int (*st)[32],int (*ft)[2], u_int8_t (*code)[32][6]) {
          * If their are any unread byte, continue the loop
          * unless we already read 8 functions
          */
-        if (readbits(bf, 5, &ins_num) == -1) {
+        if (read_bits(bf, 5, &ins_num) == -1) {
             return -1;
         }
 
         stack_counter = 0;
 
         for (int i = ins_num - 1; i >= 0; i--) {
-            if (readbits(bf, 3, &opcode) == -1) {
+            if (read_bits(bf, 3, &opcode) == -1) {
                 return -1;
             }
             // Store codes by their appearance order
             code[counter][i][0] = opcode;
             fetch_op(bf, &code[counter][i][0], &st[counter][0], opcode, &stack_counter);
         }
-        if (readbits(bf, 3, &func_label) == -1) {
+        if (read_bits(bf, 3, &func_label) == -1) {
             return -1;
         }
         // Update Function Table by their appearance order

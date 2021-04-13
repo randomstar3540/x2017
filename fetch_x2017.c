@@ -1,6 +1,6 @@
 #include "fetch_x2017.h"
 
-int readbyte(FILE *bfile, u_int8_t *bit_ptr, u_int8_t *buffer) {
+int read_byte(FILE *bfile, u_int8_t *bit_ptr, u_int8_t *buffer) {
     if (ftell(bfile) < 1) {
         return -1;
     }
@@ -11,7 +11,7 @@ int readbyte(FILE *bfile, u_int8_t *bit_ptr, u_int8_t *buffer) {
     return 0;
 }
 
-int readbits(FILE *bfile, int numbers, u_int8_t *result) {
+int read_bits(FILE *bfile, int numbers, u_int8_t *result) {
     //read specified number of bits
     static u_int8_t bit_ptr = 8;
     static u_int8_t buffer = 8;
@@ -21,7 +21,7 @@ int readbits(FILE *bfile, int numbers, u_int8_t *result) {
     for (int i = 0; i < numbers; i++) {
         if (bit_ptr == 8) {
             //if this byte is finished, we apply for a new byte
-            if (readbyte(bfile, &bit_ptr, &buffer) == -1) {
+            if (read_byte(bfile, &bit_ptr, &buffer) == -1) {
                 return -1;
             }
         }
@@ -39,7 +39,7 @@ int fetch_addr(FILE *bf, u_int8_t type, u_int8_t *result, int *st, u_int8_t *sc)
          * need 8 bit of information
          */
         case 0b00:
-            if (readbits(bf, 8, result) == -1) {
+            if (read_bits(bf, 8, result) == -1) {
                 return -1;
             }
             break;
@@ -49,7 +49,7 @@ int fetch_addr(FILE *bf, u_int8_t type, u_int8_t *result, int *st, u_int8_t *sc)
          * need 3 bit of information
          */
         case 0b01:
-            if (readbits(bf, 3, result) == -1) {
+            if (read_bits(bf, 3, result) == -1) {
                 return -1;
             }
             break;
@@ -60,7 +60,7 @@ int fetch_addr(FILE *bf, u_int8_t type, u_int8_t *result, int *st, u_int8_t *sc)
          */
         case 0b10:
         case 0b11:
-            if (readbits(bf, 5, result) == -1) {
+            if (read_bits(bf, 5, result) == -1) {
                 return -1;
             }
             /*
@@ -94,12 +94,12 @@ int fetch_op(FILE *bf, u_int8_t *code, int *st, u_int8_t op, u_int8_t *sc) {
      * Require two address
      */
     if (opcode == 0b000 || opcode == 0b011 || opcode == 0b100) {
-        if (readbits(bf, 2, &first_t) == -1) {
+        if (read_bits(bf, 2, &first_t) == -1) {
             return -1;
         }
         fetch_addr(bf, first_t, &first_v, st, sc);
 
-        if (readbits(bf, 2, &second_t) == -1) {
+        if (read_bits(bf, 2, &second_t) == -1) {
             return -1;
         }
         fetch_addr(bf, second_t, &second_v, st, sc);
@@ -116,7 +116,7 @@ int fetch_op(FILE *bf, u_int8_t *code, int *st, u_int8_t op, u_int8_t *sc) {
      */
     } else if (opcode == 0b001 || opcode == 0b101 || opcode == 0b110 ||
                opcode == 0b111) {
-        if (readbits(bf, 2, &first_t) == -1) {
+        if (read_bits(bf, 2, &first_t) == -1) {
             return -1;
         }
         fetch_addr(bf, first_t, &first_v, st, sc);
