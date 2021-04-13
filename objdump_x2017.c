@@ -1,8 +1,22 @@
 #include <string.h>
 #include "fetch_x2017.h"
 
-int fetch_code(FILE *bf,int (*st)[32],int (*ft)[2],
-                    u_int8_t (*code)[32][6]) {
+int fetch_code(FILE *bf,int (*st)[32],int (*ft)[2], u_int8_t (*code)[32][6]) {
+    /*
+     * Function: fetch_code
+     * --------------------
+     * Fetch all codes in the binary file and store it in the array provided
+     *
+     * @Param:
+     * bf: file pointer
+     * st: symbol table
+     * ft: function table
+     * code: code space
+     *
+     * returns:
+     * -1 when error happened
+     *  0 for normal cases
+     */
     u_int8_t ins_num;
     u_int8_t opcode;
     u_int8_t func_label;
@@ -19,9 +33,9 @@ int fetch_code(FILE *bf,int (*st)[32],int (*ft)[2],
             if (readbits(bf, 3, &opcode) == -1) {
                 return -1;
             }
+            // Store codes by their
             code[counter][i][0] = opcode;
-            fetch_op(bf, &code[counter][i][0], &st[counter][0], opcode,
-                     &stack_counter);
+            fetch_op(bf, &code[counter][i][0], &st[counter][0], opcode, &stack_counter);
         }
         if (readbits(bf, 3, &func_label) == -1) {
             return -1;

@@ -105,13 +105,13 @@ u_int8_t read_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr) {
                 reg[4] = 3;
                 return 1;
             }
-            return RAM[reg[6] - addr];  // STK
+            return RAM[reg[6] - addr];  // STK, add the offset to the stack base pointer
         case 0b11:
             if (reg[6] < addr) {
                 reg[4] = 3;
                 return 1;
             }
-            return RAM[RAM[reg[6] - addr]];  // Ptr
+            return RAM[RAM[reg[6] - addr]];  // PTR, first get the value in stack and use it as an address
         default:
             return 1;
     }
@@ -121,6 +121,9 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr,
                u_int8_t val) {
     switch (type) {
         case 0b00:
+            /*
+             * Will raise an error, since you can't write to a value
+             */
             reg[4] = 5;
             return 1;  // Val
         case 0b01:
@@ -132,20 +135,24 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr,
             return 0;
         case 0b10:
             if (reg[6] < addr) {
+                //detect stack overflow
                 reg[4] = 3;
                 return 1;
             }
             if (reg[6] - addr < reg[5]) {
+                //update stack top pointer if needed
                 reg[5] = reg[6] - addr;
             }
             RAM[reg[6] - addr] = val;  // STK
             return 0;
         case 0b11:
             if (reg[6] < addr) {
+                //detect stack overflow
                 reg[4] = 3;
                 return 1;
             }
             if (reg[6] - addr < reg[5]) {
+                //update stack top pointer if needed
                 reg[5] = reg[6] - addr;
             }
             RAM[RAM[reg[6] - addr]] = val;  // Ptr
@@ -154,8 +161,7 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr,
     }
 }
 
-int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6],
-              int (*ft)[][2]) {
+int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int (*ft)[][2]) {
     u_int8_t opcode;
     u_int8_t first_t;
     u_int8_t first_v;
@@ -169,83 +175,146 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6],
     second_v = (*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][4];
 
     if(update_pc(reg, code)==-1){
+        //prepare to return
         reg[4]=2;
     }
 
     switch (opcode) {
-        case 0b000:  // MOV
+
+        /* ===========
+         *     MOV
+         * ===========
+         */
+        case 0b000:
             if (write_addr(reg, RAM, first_t, first_v,
                            read_addr(reg, RAM, second_t, second_v)) == 1) {
                 return 1;
             }
             return 0;
-        case 0b001:  // CAL
+
+        /* ===========
+         *     CAL
+         * ===========
+         */
+        case 0b001:
             if (reg[5] <= 4) {
+                //detect stack overflow
                 reg[4] = 3;
                 return 0;
             }
-            RAM[reg[5] - 1] = reg[4];
-            RAM[reg[5] - 2] = reg[6];
-            RAM[reg[5] - 3] = reg[7];
-            reg[6] = reg[5] - 4;
-            reg[5] = reg[6];
-            reg[4] = 0;
+            /*
+             * RAM     | A | PC | Old_SBP | SC | ? |
+             *           |                       |
+             *      New_SBP&STP               STP-now
+             */
+            RAM[reg[5] - 1] = reg[4]; //push status code into stack
+            RAM[reg[5] - 2] = reg[6]; //push stack base pointer into stack
+            RAM[reg[5] - 3] = reg[7]; //push PC into stack
+            reg[6] = reg[5] - 4; //update SBP
+            reg[5] = reg[6]; //update STP
+            reg[4] = 0; //update Status Code
             if ((*ft)[first_v][0] != -1) {
+                //function exist, change PC
                 PC_write((*ft)[first_v][0], 0, &(reg[7]));
                 return 0;
             } else {
+                //function doesn't exist, report error
                 reg[4] = 7;
                 return 1;
             }
-        case 0b010:  // RET
-            if (PC_readFunc(reg[7]) == (*ft)[0][0]) {
+
+        /* ===========
+         *     RET
+         * ===========
+         */
+        case 0b010:
+            if (PC_readFunc(reg[7]) == (*ft)[0][0] || reg[6] == 255) {
+                //if function is main or stack at top of RAM, terminate the program
                 reg[4] = 1;
                 return 0;
             }
-            reg[4] = RAM[reg[6] + 3];
-            reg[7] = RAM[reg[6] + 1];
-            reg[5] = reg[6] + 4;
-            reg[6] = RAM[reg[6] + 2];
+            reg[4] = RAM[reg[6] + 3]; //revert status code back
+            reg[7] = RAM[reg[6] + 1]; //revert PC back
+            reg[5] = reg[6] + 4; //revert STP back
+            reg[6] = RAM[reg[6] + 2]; //revert SBP back
             return 0;
-        case 0b011:  // REF
+
+        /* ===========
+         *     REF
+         * ===========
+         */
+        case 0b011:
             if (second_t == 0b10) {
-                if (write_addr(reg, RAM, first_t, first_v, reg[6] - second_v) ==
-                    1) {
+                // if REF STK
+                if (write_addr(reg, RAM, first_t, first_v, reg[6] - second_v) == 1) {
                     return 1;
                 }
             } else {
-                if (write_addr(reg, RAM, first_t, first_v,
-                               read_addr(reg, RAM, 0b10, second_v)) == 1) {
+                // else, force REF STK
+                if (write_addr(reg, RAM, first_t, first_v, read_addr(reg, RAM, 0b10, second_v)) == 1) {
                     return 1;
                 }
             }
             return 0;
-        case 0b100:  // ADD
-            if (write_addr(reg, RAM, first_t, first_v,
-                           reg[first_v] + reg[second_v]) == 1) {
+
+        /* ===========
+         *     ADD
+         * ===========
+         */
+        case 0b100:
+            if (first_t != 0b01 || second_t != 0b01){
+                //Check type
+                reg[4]=6;
+                return 1;
+            }
+            if (first_v > 3 && first_v != 7 || second_v > 3 && second_v != 7 ) {
+                //Check if access valid
+                reg[4] = 4;
+                return 1;
+            }
+            if (write_addr(reg, RAM, first_t, first_v, reg[first_v] + reg[second_v]) == 1) {
                 return 1;
             }
             return 0;
-        case 0b101:  // PRINT
+
+        /* ===========
+         *     PRINT
+         * ===========
+         */
+        case 0b101:
             printf("%d\n", read_addr(reg, RAM, first_t, first_v));
             return 0;
-        case 0b110:  // NOT
+
+        /* ===========
+         *     NOT
+         * ===========
+         */
+        case 0b110:
             if (first_t != 0b01) {
+                //Check type
                 reg[4] = 6;
                 return 1;
             }
             if (first_v > 3 && first_v != 7) {
+                //Check if access valid
                 reg[4] = 4;
                 return 1;
             }
             reg[first_v] = ~reg[first_v];
             return 0;
-        case 0b111:  // EQU
+
+        /* ===========
+         *     EQU
+         * ===========
+         */
+        case 0b111:
             if (first_t != 0b01) {
+                //Check type
                 reg[4] = 6;
                 return 1;
             }
             if (first_v > 3 && first_v != 7) {
+                //Check if access valid
                 reg[4] = 4;
                 return 1;
             }
@@ -256,7 +325,7 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6],
             }
             return 0;
         default:
-            return -1;
+            return 1;
     }
 }
 
@@ -278,15 +347,24 @@ int main(int argc, char **argv) {
     int function_table[8][2];
     u_int8_t code_space[8][32][6];
 
+    /*
+     * Initialize function table, symbol table, code space
+     */
     memset(&symbol_table, -1, 8 * 32 * sizeof(int));
     memset(&function_table, -1, 8 * 2 * sizeof(int));
     memset(&code_space, 0, 8 * 32 * 6 * sizeof(u_int8_t));
 
+    /*
+     * Fetch Codes
+     */
     if (fetch_code(bf, symbol_table, function_table, code_space) == -1) {
         printf("Not an x2017 formatted file\n");
         return 1;
     }
 
+    /*
+     * Initialize VM
+     */
     u_int8_t reg[8];
     u_int8_t RAM[256];
 
@@ -302,11 +380,17 @@ int main(int argc, char **argv) {
     reg[6] = 255;
     reg[5] = 255;
 
+    /*
+     * Execute instructions
+     */
     while (reg[4] == 0) {
         //        debug(reg,RAM);
         handle_op(reg, RAM, &code_space, &function_table);
     }
 
+    /*
+     * Error Handling
+     */
     if (reg[4] < 2) {
         return 0;
     } else if (reg[4] == 2) {

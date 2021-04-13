@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Os -ffunction-sections -fdata-sections -s
-LDFLAGS=-Wl,-Map=object.map,--cref,--gc-section
+LDFLAGS=-Wl,--cref,--gc-section
 
 # fill in all your make rules
 
