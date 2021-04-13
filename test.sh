@@ -1,7 +1,7 @@
 #!/bin/bash
-#make vm_x2017
-#make objdump_x2017
-#
+make vm_x2017
+make objdump_x2017
+
 #cd tests
 echo 
 echo ============================================================

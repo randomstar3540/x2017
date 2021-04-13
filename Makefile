@@ -10,10 +10,6 @@ vm_x2017: fetch_x2017.c vm_x2017.c
 objdump_x2017: fetch_x2017.c objdump_x2017.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
-tests:
-	make vm_x2017
-	make objdump_x2017
-
 run_tests:
 	bash test.sh
 
