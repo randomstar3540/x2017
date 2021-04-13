@@ -396,7 +396,10 @@ int main(int argc, char **argv){
 //        debug(reg,RAM);
         handle_op(reg,RAM,&code_space,&function_table);
     }
-    if(reg[4]==3){
+    
+    if (reg[4]<3){
+        return 0;
+    }else if(reg[4]==3){
         printf("ERROR: Stack Overflow detected!\n");
         return 1;
     }else if(reg[4]==4){
@@ -423,7 +426,6 @@ int main(int argc, char **argv){
     }else{
         return 1;
     }
-    return 0;
 }
 
 
