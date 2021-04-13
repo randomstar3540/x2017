@@ -29,7 +29,7 @@ int readbits(FILE *bfile, int numbers, u_int8_t *result) {
     return 0;
 }
 
-int fetch_addr(FILE *bf, u_int8_t type, u_int8_t *result, int8_t *st,
+int fetch_addr(FILE *bf, u_int8_t type, u_int8_t *result, int *st,
                u_int8_t *sc) {
     switch (type) {
         case 0b00:
@@ -61,7 +61,7 @@ int fetch_addr(FILE *bf, u_int8_t type, u_int8_t *result, int8_t *st,
     return 0;
 }
 
-int fetch_op(FILE *bf, u_int8_t *code, int8_t *st, u_int8_t op, u_int8_t *sc) {
+int fetch_op(FILE *bf, u_int8_t *code, int *st, u_int8_t op, u_int8_t *sc) {
     u_int8_t opcode = op;
     u_int8_t first_v;
     u_int8_t first_t;

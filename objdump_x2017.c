@@ -1,7 +1,7 @@
 #include <string.h>
 #include "fetch_x2017.h"
 
-int fetch_code(FILE *bf, int8_t (*st)[32], int8_t (*ft)[2],
+int fetch_code(FILE *bf,int (*st)[32],int (*ft)[2],
                     u_int8_t (*code)[32][6]) {
     u_int8_t ins_num;
     u_int8_t opcode;
@@ -78,7 +78,7 @@ u_int8_t print_addr(u_int8_t type, u_int8_t addr) {
     return 0;
 }
 
-int decode(u_int8_t type, u_int8_t *val, int8_t *st, int8_t *sc) {
+int decode(u_int8_t type, u_int8_t *val,int *st,int *sc) {
     if (type == 0b10 || type == 0b11) {
         if (st[*val] == -1) {
             st[*val] = *sc;
@@ -91,14 +91,14 @@ int decode(u_int8_t type, u_int8_t *val, int8_t *st, int8_t *sc) {
     return 0;
 }
 
-int print_op(u_int8_t *PC, u_int8_t (*code)[][32][6], int8_t *st, int8_t *sc) {
+int print_op(u_int8_t *PC, u_int8_t (*code)[][32][6],int *st,int *sc) {
     u_int8_t opcode = (*code)[PC[0]][PC[1]][0];
     u_int8_t first_t = (*code)[PC[0]][PC[1]][1];
     u_int8_t first_v = (*code)[PC[0]][PC[1]][2];
     u_int8_t second_t = (*code)[PC[0]][PC[1]][3];
     u_int8_t second_v = (*code)[PC[0]][PC[1]][4];
 
-    int8_t status = update_pc(PC, code);
+   int status = update_pc(PC, code);
 
     decode(first_t, &first_v, st, sc);
     decode(second_t, &second_v, st, sc);
@@ -170,13 +170,13 @@ int main(int argc, char **argv) {
 
     fseek(bf, 0, SEEK_END);
 
-    int8_t symbol_table[8][32];
-    int8_t function_table[8][2];
+   int symbol_table[8][32];
+   int function_table[8][2];
     u_int8_t code_space[8][32][6];
-    int8_t status = 0;
+   int status = 0;
 
-    memset(&symbol_table, -1, 8 * 32 * sizeof(int8_t));
-    memset(&function_table, -1, 8 * 2 * sizeof(int8_t));
+    memset(&symbol_table, -1, 8 * 32 * sizeof(int));
+    memset(&function_table, -1, 8 * 2 * sizeof(int));
     memset(&code_space, 0, 8 * 32 * 6 * sizeof(u_int8_t));
 
     if (fetch_code(bf, symbol_table, function_table, code_space) == -1) {
@@ -192,12 +192,12 @@ int main(int argc, char **argv) {
             break;
         }
     }
-    int8_t stack_table[32];
-    int8_t stack_counter;
+   int stack_table[32];
+   int stack_counter;
     while (status != -1) {
         printf("FUNC LABEL %d\n", function_table[PC[0]][0]);
-        int8_t ins_num = function_table[PC[0]][1];
-        memset(&stack_table, -1, 32 * sizeof(int8_t));
+       int ins_num = function_table[PC[0]][1];
+        memset(&stack_table, -1, 32 * sizeof(int));
         stack_counter = 0;
         if (ins_num == 0) {
             status = -1;

@@ -1,7 +1,7 @@
 #include <string.h>
 #include "fetch_x2017.h"
 
-int fetch_code(FILE *bf, int8_t (*st)[32], int8_t (*ft)[2],
+int fetch_code(FILE *bf, int (*st)[32], int (*ft)[2],
                     u_int8_t (*code)[32][6]) {
     u_int8_t ins_num;
     u_int8_t opcode;
@@ -47,19 +47,6 @@ int PC_write(u_int8_t func, u_int8_t ins, u_int8_t *PC) {
     (*PC) = (func << 5) | ins;
     return 0;
 }
-
-// void debug(u_int8_t *reg, u_int8_t *RAM){
-//    printf("PC Value: F %d, I %d\n", PC_readFunc(reg[7]), PC_readIns(reg[7]));
-//    for(int i = 0; i < 8; i ++){
-//        printf("Reg%d: %d\n",i,reg[i]);
-//    }
-//    for(int i = 0; i < 32; i ++){
-//        for(int j = 0; j < 8; j++){
-//            printf("RAM %d: %d     ",i*8 + j, RAM[i*8 + j]);
-//        }
-//        printf("\n");
-//    }
-//}
 
 int update_pc(u_int8_t *reg, u_int8_t (*code)[][32][6]) {
     if (PC_readIns(reg[7]) != 0b11111) {
@@ -136,7 +123,7 @@ int write_addr(u_int8_t *reg, u_int8_t *RAM, u_int8_t type, u_int8_t addr,
 }
 
 int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6],
-              int8_t (*ft)[][2]) {
+              int (*ft)[][2]) {
     u_int8_t opcode;
     u_int8_t first_t;
     u_int8_t first_v;
@@ -253,12 +240,12 @@ int main(int argc, char **argv) {
 
     fseek(bf, 0, SEEK_END);
 
-    int8_t symbol_table[8][32];
-    int8_t function_table[8][2];
+    int symbol_table[8][32];
+    int function_table[8][2];
     u_int8_t code_space[8][32][6];
 
-    memset(&symbol_table, -1, 8 * 32 * sizeof(int8_t));
-    memset(&function_table, -1, 8 * 2 * sizeof(int8_t));
+    memset(&symbol_table, -1, 8 * 32 * sizeof(int));
+    memset(&function_table, -1, 8 * 2 * sizeof(int));
     memset(&code_space, 0, 8 * 32 * 6 * sizeof(u_int8_t));
 
     if (fetch_code(bf, symbol_table, function_table, code_space) == -1) {
