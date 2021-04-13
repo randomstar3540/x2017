@@ -286,8 +286,10 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
             if ((*ft)[first_v][0] != -1) {
                 PC_write((*ft)[first_v][0], 0, &(reg[7]));
                 return 0;
+            } else{
+                reg[4]=7;
+                return 1;
             }
-            return 0;
         case 0b010: //RET
             if(PC_readFunc(reg[7])==(*ft)[0][0]){
                 reg[4] = 1;
@@ -383,6 +385,9 @@ int main(int argc, char **argv){
 
     if(function_table[0][0] != -1){
         PC_write(function_table[0][0],0,&reg[7]);
+    }else{
+        printf("No main founction found\n");
+        return 1;
     }
     reg[6]=255;
     reg[5]=255;
@@ -392,7 +397,30 @@ int main(int argc, char **argv){
         handle_op(reg,RAM,&code_space,&function_table);
     }
     if(reg[4]==3){
-        printf("Stack Overflow detected!\n");
+        printf("ERROR: Stack Overflow detected!\n");
+        return 1;
+    }else if(reg[4]==4){
+        printf("ERROR: Invalid access on register!\n");
+        return 1;
+    }else if(reg[4]==5){
+        printf("ERROR: Writing on value type!\n");
+        return 1;
+    }else if(reg[4]==6){
+        printf("ERROR: Memory type Error!\n");
+        return 1;
+    }else if(reg[4]==7){
+        printf("ERROR: Function called do not exist!\n");
+        return 1;
+    }else if(reg[4]==8){
+        printf("ERROR: Invalid access on register!\n");
+        return 1;
+    }else if(reg[4]==9){
+        printf("ERROR: Invalid access on register!\n");
+        return 1;
+    }else if(reg[4]==10){
+        printf("ERROR: Invalid access on register!\n");
+        return 1;
+    }else{
         return 1;
     }
     return 0;
