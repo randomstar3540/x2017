@@ -1,43 +1,73 @@
 #include <string.h>
 #include "fetch_x2017.h"
 
-int fetch_code(FILE *bf, int (*st)[32], int (*ft)[2],
-                    u_int8_t (*code)[32][6]) {
+int fetch_code(FILE *bf, int (*st)[32], int (*ft)[2], u_int8_t (*code)[32][6]) {
+    /*
+     * Function: fetch_code
+     * --------------------
+     * Fetch all codes in the binary file and store it in the array provided
+     *
+     * @Param:
+     * bf: file pointer
+     * st: symbol table
+     * ft: function table
+     * code: code space
+     *
+     * returns:
+     * -1 when error happened
+     *  0 for normal cases
+     */
     u_int8_t ins_num;
     u_int8_t opcode;
     u_int8_t func_label;
     u_int8_t stack_counter;
     int counter = 0;
     while (ftell(bf) > 0 && counter < 8) {
+        /*
+         * If their are any unread byte, continue the loop
+         * unless we already read 8 functions
+         */
         if (readbits(bf, 5, &ins_num) == -1) {
+            //read the instruction count, raise error if any
             return -1;
         }
         stack_counter = 0;
 
         for (int i = ins_num - 1; i >= 0; i--) {
             if (readbits(bf, 3, &opcode) == -1) {
+                // read operation code, raise error if any
                 return -1;
             }
             code[counter][i][0] = opcode;
-            fetch_op(bf, &code[counter][i][0], &st[func_label][0], opcode,
-                     &stack_counter);
+            fetch_op(bf, &code[counter][i][0], &st[func_label][0], opcode, &stack_counter);
         }
         if (readbits(bf, 3, &func_label) == -1) {
+            // read the function label, raise error if any
             return -1;
         }
         if (ft[func_label][0] != -1) {
+            // if the function we read already exist, raise error
             return -1;
         }
-        ft[func_label][0] = counter;
+        ft[func_label][0] = counter; //store the function order and instruction count in the function table
         ft[func_label][1] = ins_num;
         counter++;
     }
     if (ftell(bf) > 1) {
+        /*
+         * After we finish reading the file,
+         * if the remaining file size still greater than 1,
+         * raise error.
+         */
         return -1;
     }
     return 0;
 }
-
+/*
+ * Program counter (reg[7])
+ * | 000 | 00000 |
+ *   FUNC   INS
+ */
 u_int8_t PC_readFunc(u_int8_t PC) { return PC >> 5; };
 u_int8_t PC_readIns(u_int8_t PC) {
     PC = PC << 3;
@@ -50,9 +80,11 @@ int PC_write(u_int8_t func, u_int8_t ins, u_int8_t *PC) {
 
 int update_pc(u_int8_t *reg, u_int8_t (*code)[][32][6]) {
     if (PC_readIns(reg[7]) != 0b11111) {
+        //if the instruction count of current PC points neq to 31,update by add 1 to ins count
         PC_write(PC_readFunc(reg[7]), PC_readIns(reg[7]) + 1, &(reg[7]));
 
         if ((*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][5] != 1) {
+            //no instruction next, prepare to return
             reg[4] = 2;
             return 0;
         }
@@ -136,7 +168,9 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6],
     second_t = (*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][3];
     second_v = (*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][4];
 
-    update_pc(reg, code);
+    if(update_pc(reg, code)==-1){
+        reg[4]=2;
+    }
 
     switch (opcode) {
         case 0b000:  // MOV
