@@ -1,4 +1,4 @@
-CC=clang
+CC=gcc
 CFLAGS=-Os -ffunction-sections -fdata-sections -s
 LDFLAGS=-Wl,-Map=object.map,--cref,--gc-section
 
