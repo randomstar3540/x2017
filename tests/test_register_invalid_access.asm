@@ -1,0 +1,3 @@
+FUNC LABEL 0
+    MOV REG 5 VAL 8
+    RET
