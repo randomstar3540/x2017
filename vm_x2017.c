@@ -168,18 +168,18 @@ int PC_write(u_int8_t func, u_int8_t ins, u_int8_t *PC){
     return 0;
 }
 
-void debug(u_int8_t *reg, u_int8_t *RAM){
-    printf("PC Value: F %d, I %d\n", PC_readFunc(reg[7]), PC_readIns(reg[7]));
-    for(int i = 0; i < 8; i ++){
-        printf("Reg%d: %d\n",i,reg[i]);
-    }
-    for(int i = 0; i < 32; i ++){
-        for(int j = 0; j < 8; j++){
-            printf("RAM %d: %d     ",i*8 + j, RAM[i*8 + j]);
-        }
-        printf("\n");
-    }
-}
+//void debug(u_int8_t *reg, u_int8_t *RAM){
+//    printf("PC Value: F %d, I %d\n", PC_readFunc(reg[7]), PC_readIns(reg[7]));
+//    for(int i = 0; i < 8; i ++){
+//        printf("Reg%d: %d\n",i,reg[i]);
+//    }
+//    for(int i = 0; i < 32; i ++){
+//        for(int j = 0; j < 8; j++){
+//            printf("RAM %d: %d     ",i*8 + j, RAM[i*8 + j]);
+//        }
+//        printf("\n");
+//    }
+//}
 
 int update_pc(u_int8_t *reg, u_int8_t (*code)[][32][6]){
     if (PC_readIns(reg[7]) != 0b11111){
@@ -187,10 +187,8 @@ int update_pc(u_int8_t *reg, u_int8_t (*code)[][32][6]){
         PC_write(PC_readFunc(reg[7]),PC_readIns(reg[7]) +1, &(reg[7]));
 
         if((*code)[PC_readFunc(reg[7])][PC_readIns(reg[7])][5] != 1 ){
-            if(PC_readFunc(reg[7])==0){
-                reg[4] = 2;
-                return 0;
-            }
+            reg[4] = 2;
+            return 0;
         }
         return 0;
     }
@@ -283,12 +281,12 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
                 reg[4] = 3;
                 return 0;
             }
-            RAM[reg[5]-1] = reg[5];
+            RAM[reg[5]-1] = reg[4];
             RAM[reg[5]-2] = reg[6];
             RAM[reg[5]-3] = reg[7];
             reg[6] = reg[5] - 4;
             reg[5] = reg[6];
-
+            reg[4] = 0;
             if ((*ft)[first_v][0] != -1) {
                 PC_write((*ft)[first_v][0], 0, &(reg[7]));
                 return 0;
@@ -301,9 +299,9 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int8_t (*
                 reg[4] = 1;
                 return 0;
             }
-            reg[4] = 0;
+            reg[4] = RAM[reg[6]+3];
             reg[7] = RAM[reg[6]+1];
-            reg[5] = RAM[reg[6]+3];
+            reg[5] = reg[6]+4;
             reg[6] = RAM[reg[6]+2];
             return 0;
         case 0b011: //REF
@@ -403,8 +401,11 @@ int main(int argc, char **argv){
         handle_op(reg,RAM,&code_space,&function_table);
     }
 
-    if (reg[4]<3){
+    if (reg[4]<2) {
         return 0;
+    }else if(reg[4]==2){
+        printf("ERROR: Function terminated without return\n");
+        return 1;
     }else if(reg[4]==3){
         printf("ERROR: Stack Overflow detected!\n");
         return 1;
@@ -419,15 +420,6 @@ int main(int argc, char **argv){
         return 1;
     }else if(reg[4]==7){
         printf("ERROR: Function called do not exist!\n");
-        return 1;
-    }else if(reg[4]==8){
-        printf("ERROR: Invalid access on register!\n");
-        return 1;
-    }else if(reg[4]==9){
-        printf("ERROR: Invalid access on register!\n");
-        return 1;
-    }else if(reg[4]==10){
-        printf("ERROR: Invalid access on register!\n");
         return 1;
     }else{
         return 1;

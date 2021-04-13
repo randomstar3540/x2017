@@ -317,6 +317,9 @@ int main(int argc, char **argv){
         int8_t ins_num = function_table[PC[0]][1];
         memset(&stack_table,-1, 32*sizeof(int8_t));
         stack_counter = 0;
+        if(ins_num==0){
+            status = -1;
+        }
         for(int i = 0; i < ins_num; i++) {
             status = print_op(PC,&code_space,stack_table,&stack_counter);
             if(status == -1){
