@@ -127,7 +127,7 @@ int fetch_next_func(FILE* bf, int8_t (*st)[32],int8_t (*ft)[2], u_int8_t (*code)
     u_int8_t func_label;
     u_int8_t stack_counter;
     int counter = 0;
-    while(ftell(bf) > 0){
+    while(ftell(bf) > 0 && counter < 8){
         if (readbits(bf,5, &ins_num)==-1){
             return -1;
         }
@@ -147,6 +147,9 @@ int fetch_next_func(FILE* bf, int8_t (*st)[32],int8_t (*ft)[2], u_int8_t (*code)
         ft[counter][0] =func_label;
         ft[counter][1] =ins_num;
         counter ++;
+    }
+    if (ftell(bf)>1){
+        return -1;
     }
     return 0;
 }

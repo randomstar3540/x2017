@@ -127,7 +127,7 @@ int fetch_next_func(FILE* bf, int8_t (*st)[32],int8_t (*ft)[2], u_int8_t (*code)
     u_int8_t func_label;
     u_int8_t stack_counter;
     int counter = 0;
-    while(ftell(bf) > 0){
+    while(ftell(bf) > 0 && counter < 8){
         if(readbits(bf,5, &ins_num)==-1){
             return -1;
         }
@@ -143,9 +143,15 @@ int fetch_next_func(FILE* bf, int8_t (*st)[32],int8_t (*ft)[2], u_int8_t (*code)
         if (readbits(bf,3, &func_label)==-1){
             return -1;
         }
+        if (ft[func_label][0] != -1){
+            return -1;
+        }
         ft[func_label][0] =counter;
         ft[func_label][1] =ins_num;
         counter ++;
+    }
+    if (ftell(bf)>1){
+        return -1;
     }
     return 0;
 }
@@ -386,7 +392,7 @@ int main(int argc, char **argv){
     if(function_table[0][0] != -1){
         PC_write(function_table[0][0],0,&reg[7]);
     }else{
-        printf("No main founction found\n");
+        printf("ERROR: No main function found\n");
         return 1;
     }
     reg[6]=255;
@@ -396,7 +402,7 @@ int main(int argc, char **argv){
 //        debug(reg,RAM);
         handle_op(reg,RAM,&code_space,&function_table);
     }
-    
+
     if (reg[4]<3){
         return 0;
     }else if(reg[4]==3){
