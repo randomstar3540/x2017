@@ -23,6 +23,10 @@ int fetch_code(FILE *bf,int (*st)[32],int (*ft)[2], u_int8_t (*code)[32][6]) {
     u_int8_t stack_counter;
     int counter = 0;
     while (ftell(bf) > 0 && counter < 8) {
+        /*
+         * If their are any unread byte, continue the loop
+         * unless we already read 8 functions
+         */
         if (readbits(bf, 5, &ins_num) == -1) {
             return -1;
         }
@@ -33,28 +37,41 @@ int fetch_code(FILE *bf,int (*st)[32],int (*ft)[2], u_int8_t (*code)[32][6]) {
             if (readbits(bf, 3, &opcode) == -1) {
                 return -1;
             }
-            // Store codes by their
+            // Store codes by their appearance order
             code[counter][i][0] = opcode;
             fetch_op(bf, &code[counter][i][0], &st[counter][0], opcode, &stack_counter);
         }
         if (readbits(bf, 3, &func_label) == -1) {
             return -1;
         }
+        // Update Function Table by their appearance order
         ft[counter][0] = func_label;
         ft[counter][1] = ins_num;
         counter++;
     }
     if (ftell(bf) > 1) {
+        /*
+         * After we finish reading the file,
+         * if the remaining file size still greater than 1,
+         * raise error.
+         */
         return -1;
     }
     return 0;
 }
 
+/*
+ * PC[0]: Current Function Address
+ * PC[1]: Current Instruction Address
+ */
 int update_pc(u_int8_t *PC, u_int8_t (*code)[][32][6]) {
     if (PC[1] + 1 <= 0b11111 && (*code)[PC[0]][PC[1] + 1][5] == 1) {
+        //update pc by add 1 to instruction, if ins + 1 <= 31 and the instruction exist
         PC[1] += 1;
         return 0;
     } else if (PC[0] >= 1) {
+        //Go to next function, if exist
+        //As we store code by appearance order, function address will start from 0
         PC[0] -= 1;
         PC[1] = 0;
         return 0;
@@ -63,6 +80,19 @@ int update_pc(u_int8_t *PC, u_int8_t (*code)[][32][6]) {
 }
 
 u_int8_t print_addr(u_int8_t type, u_int8_t addr) {
+    /*
+     * Function: print_addr
+     * --------------------
+     * Print out the address with specified type
+     *
+     * @Param:
+     * type: address type
+     * address: address value
+     *
+     * returns:
+     * -1 when error happened
+     *  0 for normal cases
+     */
     switch (type) {
         case 0b00:  // Val
             printf(" VAL %d", addr);
@@ -93,6 +123,21 @@ u_int8_t print_addr(u_int8_t type, u_int8_t addr) {
 }
 
 int decode(u_int8_t type, u_int8_t *val,int *st,int *sc) {
+    /*
+     * Function: decode
+     * --------------------
+     * Take a stack symbol and decode it by order of appearance
+     *
+     * @Param:
+     * type: address type
+     * val: address value
+     * st: symbol table for this function
+     * sc: stack table for this function
+     *
+     * returns:
+     * -1 when error happened
+     *  0 for normal cases
+     */
     if (type == 0b10 || type == 0b11) {
         if (st[*val] == -1) {
             st[*val] = *sc;
@@ -106,6 +151,21 @@ int decode(u_int8_t type, u_int8_t *val,int *st,int *sc) {
 }
 
 int print_op(u_int8_t *PC, u_int8_t (*code)[][32][6],int *st,int *sc) {
+    /*
+     * Function: print_op
+     * --------------------
+     * Print out the instruction
+     *
+     * @Param:
+     * PC: points to instruction address
+     * code: code space
+     * st: symbol table for this function
+     * sc: stack table for this function
+     *
+     * returns:
+     * -1 when error happened
+     *  0 for normal cases
+     */
     u_int8_t opcode = (*code)[PC[0]][PC[1]][0];
     u_int8_t first_t = (*code)[PC[0]][PC[1]][1];
     u_int8_t first_v = (*code)[PC[0]][PC[1]][2];
@@ -184,20 +244,29 @@ int main(int argc, char **argv) {
 
     fseek(bf, 0, SEEK_END);
 
-   int symbol_table[8][32];
-   int function_table[8][2];
+    /*
+     * Initialize function table, symbol table, code space
+     */
+    int symbol_table[8][32];
+    int function_table[8][2];
     u_int8_t code_space[8][32][6];
-   int status = 0;
+    int status = 0;
 
     memset(&symbol_table, -1, 8 * 32 * sizeof(int));
     memset(&function_table, -1, 8 * 2 * sizeof(int));
     memset(&code_space, 0, 8 * 32 * 6 * sizeof(u_int8_t));
 
+    /*
+     * Fetch Codes
+     */
     if (fetch_code(bf, symbol_table, function_table, code_space) == -1) {
         printf("Not an x2017 formatted file\n");
         return 1;
     }
 
+    /*
+     * Find out the top function in the file
+     */
     u_int8_t PC[2] = {0, 0};
     for (int i = 0; i < 8; i++) {
         if (function_table[i][0] != -1) {
@@ -206,6 +275,10 @@ int main(int argc, char **argv) {
             break;
         }
     }
+
+    /*
+     * Print!
+     */
    int stack_table[32];
    int stack_counter;
     while (status != -1) {
