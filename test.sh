@@ -56,14 +56,3 @@ done
 echo 
 echo $tests test total, $pass test passed, $((tests - pass)) test failed.
 echo
-#DIFF=$(cat /dev/null | xargs -a no_data_input_2.args .././timetable 2>&1 | diff - no_data_input_2.out)
-#if [ "$DIFF" != "" ]
-#then
-#    echo "[FAILED!]         Testing on no_data_input_2"
-#    echo $DIFF
-#else
-#    pass=$((pass + 1))
-#    echo "[PASSED]          Testing on no_data_input_2"
-#fi
-
-# Trigger all your test cases with this script
