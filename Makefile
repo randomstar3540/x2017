@@ -1,20 +1,25 @@
 CC=gcc
-CFLAGS=-fsanitize=address -Wvla -Wall -Werror -g -std=gnu11 -lasan
+CFLAGS=-Os -ffunction-sections -fdata-sections -s
+LDFLAGS=-Wl,-Map=object.map,--cref,--gc-section
 
 # fill in all your make rules
 
 vm_x2017: fetch_x2017.c vm_x2017.c
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+	gzexe $@
 
 objdump_x2017: fetch_x2017.c objdump_x2017.c
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+	gzexe $@
 
 tests:
-	echo "tests"
+	make vm_x2017
+	make objdump_x2017
 
 run_tests:
-	echo "run_tests"
+	./tests.sh
 
 clean:
-	echo "clean"
+	rm objdump_x2017
+	rm vm_x2017
 
