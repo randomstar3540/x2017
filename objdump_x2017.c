@@ -232,13 +232,13 @@ int print_op(u_int8_t *PC, u_int8_t (*code)[][32][6],int *st,int *sc) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        printf("Please Provide a <filename> as command line arguments");
+        fprintf(stderr, "Please Provide a <filename> as command line arguments");
         return 1;
     }
 
     FILE *bf = fopen(argv[1], "rb");
     if (bf == NULL) {
-        printf("File Not Found!\n");
+        fprintf(stderr, "File Not Found!\n");
         return 1;
     }
 
@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
      * Fetch Codes
      */
     if (fetch_code(bf, symbol_table, function_table, code_space) == -1) {
-        printf("Not an x2017 formatted file\n");
+        fprintf(stderr, "Not an x2017 formatted file\n");
         return 1;
     }
 

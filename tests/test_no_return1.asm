@@ -1,2 +1,2 @@
 FUNC LABEL 0
-    PRINT VAL 1
+    MOV REG 0 VAL 1

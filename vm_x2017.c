@@ -331,13 +331,13 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int (*ft)
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        printf("Please Provide a <filename> as command line arguments");
+        fprintf(stderr, "Please Provide a <filename> as command line arguments");
         return 1;
     }
 
     FILE *bf = fopen(argv[1], "rb");
     if (bf == NULL) {
-        printf("File Not Found!\n");
+        fprintf(stderr, "File Not Found!\n");
         return 1;
     }
 
@@ -358,7 +358,7 @@ int main(int argc, char **argv) {
      * Fetch Codes
      */
     if (fetch_code(bf, symbol_table, function_table, code_space) == -1) {
-        printf("Not an x2017 formatted file\n");
+        fprintf(stderr, "Not an x2017 formatted file\n");
         return 1;
     }
 
@@ -374,7 +374,7 @@ int main(int argc, char **argv) {
     if (function_table[0][0] != -1) {
         PC_write(function_table[0][0], 0, &reg[7]);
     } else {
-        printf("ERROR: No main function found\n");
+        fprintf(stderr, "ERROR: No main function found\n");
         return 1;
     }
     reg[6] = 255;
@@ -394,22 +394,22 @@ int main(int argc, char **argv) {
     if (reg[4] < 2) {
         return 0;
     } else if (reg[4] == 2) {
-        printf("ERROR: Function terminated without return\n");
+        fprintf(stderr, "ERROR: Function terminated without return\n");
         return 1;
     } else if (reg[4] == 3) {
-        printf("ERROR: Stack Overflow detected!\n");
+        fprintf(stderr, "ERROR: Stack Overflow detected!\n");
         return 1;
     } else if (reg[4] == 4) {
-        printf("ERROR: Invalid access on register!\n");
+        fprintf(stderr, "ERROR: Invalid access on register!\n");
         return 1;
     } else if (reg[4] == 5) {
-        printf("ERROR: Writing on value type!\n");
+        fprintf(stderr, "ERROR: Writing on value type!\n");
         return 1;
     } else if (reg[4] == 6) {
-        printf("ERROR: Memory type Error!\n");
+        fprintf(stderr, "ERROR: Memory type Error!\n");
         return 1;
     } else if (reg[4] == 7) {
-        printf("ERROR: Function called do not exist!\n");
+        fprintf(stderr, "ERROR: Function called do not exist!\n");
         return 1;
     } else {
         return 1;
