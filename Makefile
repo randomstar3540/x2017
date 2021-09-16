@@ -1,12 +1,11 @@
 CC=gcc
-CFLAGS=-Os -ffunction-sections -fdata-sections -s
+CFLAGS=-fsanitize=address -Wall -Werror -std=gnu11 -g -lm
 LDFLAGS=-Wl,--gc-section
 
 # fill in all your make rules
 
 vm_x2017: fetch_x2017.c vm_x2017.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
-	objcopy -R .gnu.version -R .comment -R .gnu.hash -R .note.ABI-tag -R .note.gnu.build-id -R .note.gnu.property -R .eh_frame vm_x2017
 
 objdump_x2017: fetch_x2017.c objdump_x2017.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@

@@ -267,7 +267,7 @@ int handle_op(u_int8_t *reg, u_int8_t *RAM, u_int8_t (*code)[][32][6], int (*ft)
                 reg[4]=6;
                 return 1;
             }
-            if (first_v > 3 && first_v != 7 || second_v > 3 && second_v != 7 ) {
+            if (((first_v > 3) && (first_v != 7)) || ((second_v > 3) && (second_v != 7) )) {
                 //Check if access valid
                 reg[4] = 4;
                 return 1;
